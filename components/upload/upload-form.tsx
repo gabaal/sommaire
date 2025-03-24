@@ -5,6 +5,7 @@ import UploadFormInput from "./upload-form-input";
 import { useUploadThing } from "@/utils/uploadthing";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
+import { generatePdfSummary } from "@/actions/upload-actions";
 
 const schema = z.object({
   file: z
@@ -61,6 +62,10 @@ export default function UploadForm() {
 
     toast.success("🗃️ Processing file, this may take some time");
     // Parse the PDF using LangChain
+
+    const summary = await generatePdfSummary(resp);
+    console.log({ summary });
+
     // Summarize the pdf using AI
     // Save the summary to the database
     // Redirect to the [id] summary page
