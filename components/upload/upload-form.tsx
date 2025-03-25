@@ -6,6 +6,7 @@ import { useUploadThing } from "@/utils/uploadthing";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
 import { generatePdfSummary } from "@/actions/upload-actions";
+import { useRef, useState } from "react";
 
 const schema = z.object({
   file: z
@@ -21,6 +22,9 @@ const schema = z.object({
 });
 
 export default function UploadForm() {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const { startUpload, routeConfig } = useUploadThing("pdfUploader", {
     onClientUploadComplete: () => {
       console.log("uploaded successfully!");
@@ -38,41 +42,66 @@ export default function UploadForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("submitted");
-    const formData = new FormData(e.currentTarget);
-    const file = formData.get("file") as File;
 
-    // Validate the fields using schema with Zod
-    const validatedFields = schema.safeParse({ file });
+    try {
+      setIsLoading(true);
+      console.log("submitted");
+      const formData = new FormData(e.currentTarget);
+      const file = formData.get("file") as File;
 
-    if (!validatedFields.success) {
-      console.log(
-        validatedFields.error.flatten().fieldErrors.file?.[0] ?? "Invalid file"
-      );
-      toast.error("Invalid file");
-      return;
+      // Validate the fields using schema with Zod
+      const validatedFields = schema.safeParse({ file });
+
+      if (!validatedFields.success) {
+        console.log(
+          validatedFields.error.flatten().fieldErrors.file?.[0] ??
+            "Invalid file"
+        );
+        toast.error("Invalid file");
+        setIsLoading(false);
+        return;
+      }
+      toast.success("🗃️ Uploading file");
+      // Upload the file to UploadThing
+      const resp = await startUpload([file]);
+      if (!resp) {
+        toast.error("Please use a different file");
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success("🗃️ Processing file, this may take some time");
+      // Parse the PDF using LangChain
+      // Summarize the pdf using AI
+      const result = await generatePdfSummary(resp);
+      console.log({ result });
+      formRef.current?.reset();
+      toast.success("🗃️ Summary complete, now saving...");
+      setIsLoading(false);
+      const { data = null, message = null } = result || {};
+      if (data) {
+        toast.success("🗃️ Summary complete, now saving...");
+        formRef.current?.reset();
+        setIsLoading(false);
+        if (data.summary) {
+          // Save the summary to the database
+        }
+      }
+
+      // Redirect to the [id] summary page
+    } catch (error) {
+      console.error("Error occured", error);
+      setIsLoading(false);
+      formRef.current?.reset();
     }
-    toast.success("🗃️ Uploading file");
-    // Upload the file to UploadThing
-    const resp = await startUpload([file]);
-    if (!resp) {
-      toast.error("Please use a different file");
-      return;
-    }
-
-    toast.success("🗃️ Processing file, this may take some time");
-    // Parse the PDF using LangChain
-
-    const summary = await generatePdfSummary(resp);
-    console.log({ summary });
-
-    // Summarize the pdf using AI
-    // Save the summary to the database
-    // Redirect to the [id] summary page
   };
   return (
     <div className="flex flex-col gap-8 w-full max-w-2xl mx-auto">
-      <UploadFormInput onSubmit={handleSubmit} />
+      <UploadFormInput
+        isLoading={isLoading}
+        ref={formRef}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }

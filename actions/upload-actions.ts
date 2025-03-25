@@ -59,6 +59,13 @@ export async function generatePdfSummary(
         data: null,
       };
     }
+    return {
+      success: true,
+      message: "Summary generated successfully",
+      data: {
+        summary,
+      },
+    };
   } catch (err) {
     return {
       success: false,
