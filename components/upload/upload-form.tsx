@@ -5,8 +5,12 @@ import UploadFormInput from "./upload-form-input";
 import { useUploadThing } from "@/utils/uploadthing";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
-import { generatePdfSummary } from "@/actions/upload-actions";
+import {
+  generatePdfSummary,
+  storePdfSummaryAction,
+} from "@/actions/upload-actions";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const schema = z.object({
   file: z
@@ -24,7 +28,7 @@ const schema = z.object({
 export default function UploadForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const router = useRouter();
   const { startUpload, routeConfig } = useUploadThing("pdfUploader", {
     onClientUploadComplete: () => {
       console.log("uploaded successfully!");
@@ -79,20 +83,32 @@ export default function UploadForm() {
       toast.success("🗃️ Summary complete, now saving...");
       setIsLoading(false);
       const { data = null, message = null } = result || {};
+
       if (data) {
+        let storeResult: any;
         toast.success("🗃️ Summary complete, now saving...");
-        formRef.current?.reset();
+
         setIsLoading(false);
         if (data.summary) {
           // Save the summary to the database
+          storeResult = await storePdfSummaryAction({
+            fileUrl: resp[0].serverData.file.url,
+            summary: data.summary,
+            title: data.title,
+            fileName: file.name,
+          });
+          toast.success("🗃️ Summary complete and saved.");
+          formRef.current?.reset();
+          router.push(`/summaries/${storeResult.id}`);
+          // Redirect to the [id] summary page
         }
       }
-
-      // Redirect to the [id] summary page
     } catch (error) {
       console.error("Error occured", error);
       setIsLoading(false);
       formRef.current?.reset();
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
