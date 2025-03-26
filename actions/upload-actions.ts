@@ -188,5 +188,8 @@ export async function storePdfSummaryAction({
   return {
     success: true,
     message: "PDF Summary saved successfully",
+    data: {
+      id: savedSummary.id,
+    },
   };
 }

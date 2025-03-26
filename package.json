@@ -15,6 +15,7 @@
     "@langchain/community": "^0.3.37",
     "@langchain/core": "^0.3.43",
     "@neondatabase/serverless": "^1.0.0",
+    "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.6",
     "@uploadthing/react": "^7.3.0",

@@ -99,7 +99,7 @@ export default function UploadForm() {
           });
           toast.success("🗃️ Summary complete and saved.");
           formRef.current?.reset();
-          router.push(`/summaries/${storeResult.id}`);
+          router.push(`/summaries/${storeResult.data.id}`);
           // Redirect to the [id] summary page
         }
       }
