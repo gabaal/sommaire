@@ -1,21 +1,21 @@
 import BgGradient from "@/components/common/bg-gradient";
 import { SummaryCard } from "@/components/summaries/summary-card";
 import { Button } from "@/components/ui/button";
+import { getSummaries } from "@/lib/summaries";
+import { currentUser } from "@clerk/nextjs/server";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await currentUser();
+  const userId = user?.id;
+  if (!userId) {
+    return redirect("/sign-in");
+  }
+
   const uploadLimit = 5;
-  const summaries = [
-    {
-      id: 1,
-      title: "Ai Powered Task Manager",
-      created_at: "2025-03-25 16:39:56.67777+00",
-      summary_text:
-        "# 🤖 AI Powered Task Manager: Taking Productivity to the Next Level •🎯 Revolutionize task management with smart AI features and a user-friendly interface.# Document Details •🗃️ Type: Project Proposal•👯 For: Developers and Project Managers# Key Highlights•🚀 AI-powered enhancements like task summaries and smart deadlines•⭐ Standard task manager features like projects, boards, and team collaboration•💫 Freemium model for monetization # Why it matters •💡 By integrating AI with task management, we can boost productivity, streamline workflow, and offer a seamless user experience. This could revolutionize the way teams work and collaborate.# Main Points •🎯 AI features like task auto-delegation and voice-to-task conversion•💪 Robust tech stack for scalability and speed, including Next.js, Node.js, PostgreSQL, OpenAI, and Stripe•🔥 Four-phase development plan from setup to subscription system # Pro Tips •⭐ Start with the basic task manager features before integrating the AI components•💎 Use a freemium model to attract users and generate revenue•🌟 Pay attention to UI/UX design for an engaging user experience# Key Terms to Know•📚 CRUD: Create, Read, Update, Delete - basic functions of a database•🔍 Freemium Model: Basic features are free, advanced features require payment# Bottom Line•💫 The integration of AI into task management could be a game-changer in increasing productivity and enhancing team collaboration.",
-      status: "completed",
-    },
-  ];
+  const summaries = await getSummaries(userId);
   return (
     <main className="min-h-screen">
       <BgGradient className="from-emarald-200 via-teal-200 to-cyan-200" />
